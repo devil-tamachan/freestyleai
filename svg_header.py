@@ -5,6 +5,12 @@
 import re
 import bpy
 import freestyle
+try:
+    import xml.etree.cElementTree as et
+except ImportError:
+    import xml.etree.ElementTree as et
+
+SVG_NS = "http://www.w3.org/2000/svg"
 
 _HEADER = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
