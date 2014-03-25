@@ -14,9 +14,20 @@ _HEADER = """\
 
 scene = freestyle.utils.getCurrentScene()
 current_frame = scene.frame_current
-path = re.sub(r'\.blend$|$', '%06d.svg' % current_frame, bpy.data.filepath)
-f = open(path, "w")
+path = re.sub(r'\.blend$|$', '.svg' , bpy.data.filepath)
 w = scene.render.resolution_x * scene.render.resolution_percentage / 100
 h = scene.render.resolution_y * scene.render.resolution_percentage / 100
-f.write(_HEADER % (w, h))
-f.close()
+
+try:
+    f_string = open(path).read()
+    if not _HEADER % (w,h) in f_string:
+        print ("culo1")
+        f = open(path, "w")
+        f.write(_HEADER % (w, h))
+        f.close()
+		
+except:
+    print ("culo2")
+    f = open(path, "w")
+    f.write(_HEADER % (w, h))
+    f.close()
