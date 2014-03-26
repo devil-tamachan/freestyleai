@@ -14,8 +14,21 @@ from freestyle.shaders import *
 from parameter_editor import *
 from freestyle.chainingiterators import *
 
+try:
+    import xml.etree.cElementTree as et
+except ImportError:
+    import xml.etree.ElementTree as et
+
+SVG_NS = "http://www.w3.org/2000/svg"
+et.register_namespace("", SVG_NS)
+et.register_namespace("sodipodi", "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd")
+et.register_namespace("inkscape", "http://www.inkscape.org/namespaces/inkscape")
+
 scene = getCurrentScene()
 current_frame = scene.frame_current
+w = scene.render.resolution_x * scene.render.resolution_percentage / 100
+h = scene.render.resolution_y * scene.render.resolution_percentage / 100
+path = re.sub(r'\.blend$|$', '.svg' , bpy.data.filepath)
 
 # select
 preds = [
@@ -67,11 +80,9 @@ class ShapeZ(BinaryPredicate1D):
 Operators.sort(ShapeZ())
 
 # shade and write svg
-path = re.sub(r'\.blend$|$', '%06d.svg' % current_frame, bpy.data.filepath)
-f = open(path, "a")
 
-w = scene.render.resolution_x * scene.render.resolution_percentage / 100
-h = scene.render.resolution_y * scene.render.resolution_percentage / 100
+tree = et.parse(path)
+root = tree.getroot()
 
 shape_map = {}
 
@@ -101,24 +112,41 @@ shaders_list = [
 Operators.create(TrueUP1D(), shaders_list)
 
 def write_fill(item):
-    f.write('<path fill-rule="evenodd" fill="#%02x%02x%02x" fill-opacity="%.2f" stroke="none" d="\n'
-        % (tuple(map(lambda c: c * 255, item[1])) + (item[2],)))
+    xml_string = '<path fill-rule="evenodd" fill="#%02x%02x%02x" fill-opacity="%.2f" stroke="none" d="\n' % (tuple(map(lambda c: c * 255, item[1])) + (item[2],))
     for stroke in item[0]:
         points = []
-        f.write('M ')
+        xml_string += 'M '
         for v in stroke:
             x, y = v.point
-            f.write('%.3f,%.3f ' % (x, h - y))
-        f.write('z\n')
-    f.write('" />\n')
+            xml_string += '%.3f,%.3f ' % (x, h - y)
+        xml_string += 'z'
+    xml_string +='" />'
+    return xml_string
 
-f.write('<g  id="layer_fills" inkscape:groupmode="layer" inkscape:label="fills">\n')
-f.write('<g id="fills">\n')
+# layer for the frame
+if tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame) is None:
+	layer_frame = et.XML('<g id="frame_%06d"></g>' % current_frame)
+	layer_frame.set('{http://www.inkscape.org/namespaces/inkscape}groupmode', 'layer')
+	layer_frame.set('{http://www.inkscape.org/namespaces/inkscape}label', 'frame_%06d' % current_frame)
+	root.append(layer_frame)
+else:
+	layer_frame = tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame)
+
+
+# layer for fills
+layer_fills = et.XML('<g  id="layer_fills"></g>')
+layer_fills.set('{http://www.inkscape.org/namespaces/inkscape}groupmode', 'layer')
+layer_fills.set('{http://www.inkscape.org/namespaces/inkscape}label', 'fills')
+layer_frame.append(layer_fills)
+group_fills = et.XML('<g id="fills"></g>' )
+layer_fills.append(group_fills)
+
 if len(shape_map) == 1:
-    write_fill(next(iter(shape_map.values())))
+    fill = et.XML(write_fill(next(iter(shape_map.values()))))
+    group_fills.append(fill)
 else:
     for k, item in sorted(shape_map.items(), key = lambda x: -z_map[x[0]]):
-        write_fill(item)
-f.write('</g>\n')
-f.write('</g>\n')
-f.close()
+        fill = et.XML(write_fill(item))
+        group_fills.append(fill)
+
+tree.write(path)
