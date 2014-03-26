@@ -105,4 +105,4 @@ group_visible = et.XML('<g id="visible"></g>' )
 layer_visible.append(group_visible)
 Operators.create(TrueUP1D(), shaders_list)
 
-tree.write(path)
+tree.write(path, encoding='UTF-8', xml_declaration=True)

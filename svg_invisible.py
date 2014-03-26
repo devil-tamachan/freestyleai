@@ -105,4 +105,4 @@ layer_invisible.append(group_invisible)
 
 Operators.create(TrueUP1D(), shaders_list)
 
-tree.write(path)
+tree.write(path, encoding='UTF-8', xml_declaration=True)

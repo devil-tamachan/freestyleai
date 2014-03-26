@@ -165,4 +165,4 @@ else:
         fill = et.XML(write_fill(item))
         group_fills.append(fill)
 
-tree.write(path)
+tree.write(path, encoding='UTF-8', xml_declaration=True)
