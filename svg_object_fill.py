@@ -18,6 +18,8 @@ try:
     import xml.etree.cElementTree as et
 except ImportError:
     import xml.etree.ElementTree as et
+    
+fps = 10
 
 _HEADER = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>\n
@@ -147,6 +149,45 @@ if tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_fram
 	root.append(layer_frame)
 else:
 	layer_frame = tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame)
+
+# SVG animation stuff
+frames = tree.findall("*")
+n_of_frames = len(frames)
+keyTimes = ""
+for n in range(1, n_of_frames +1):
+	keyTimes += str((n-1)/fps) + ";"
+keyTimes += str(n_of_frames / fps)
+dur = (n_of_frames / fps)
+
+animation_tags = tree.findall(".//{http://www.w3.org/2000/svg}animate")
+
+for n in range(0, len(animation_tags)):
+	values = ""
+	for m in range(0, len(animation_tags)):
+		if m == n:
+			values+="inline;"
+		else:
+			values+="none;"
+	animation_tags[n].set('values', values+"none;none")
+	
+values = ""
+for n in range(1, n_of_frames):
+	values += "none;"
+values += "inline;none"
+
+if tree.find(".//{http://www.w3.org/2000/svg}animate[@id='anim_%06d']" % current_frame) is None:
+	frame_anim = et.XML('<animate id="anim_%06d" />' % current_frame)
+	frame_anim.set('attributeName', 'display')
+	frame_anim.set('values', values)
+	frame_anim.set('repeatCount', 'indefinite')
+	frame_anim.set('begin', '0s')
+	frame_anim.set('keyTimes', keyTimes)
+	frame_anim.set('dur', str(dur)+"s")
+	layer_frame.append(frame_anim)
+	
+for e in tree.findall(".//{http://www.w3.org/2000/svg}animate"):
+	e.set('keyTimes', keyTimes)
+	e.set('dur', str(dur)+"s")
 
 
 # layer for fills
