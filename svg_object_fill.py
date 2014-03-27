@@ -154,9 +154,9 @@ else:
 frames = tree.findall("*")
 n_of_frames = len(frames)
 keyTimes = ""
-for n in range(1, n_of_frames +1):
-	keyTimes += str((n-1)/fps) + ";"
-keyTimes += str(n_of_frames / fps)
+for n in range(0, n_of_frames):
+	keyTimes += str(n/n_of_frames) + ";"
+keyTimes += "1"
 dur = (n_of_frames / fps)
 
 animation_tags = tree.findall(".//{http://www.w3.org/2000/svg}animate")
