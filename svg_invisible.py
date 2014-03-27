@@ -17,7 +17,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as et
 
-# change this values to change hidden lines style, default is black lines with 2px thickness    
+# change this values to change hidden lines style, default is black lines with 1px thickness    
 color = "black"    
 width = 1
 
