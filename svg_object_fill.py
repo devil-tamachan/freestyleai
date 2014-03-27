@@ -165,4 +165,23 @@ else:
         fill = et.XML(write_fill(item))
         group_fills.append(fill)
 
+# prettifies
+def indent(elem, level=0):
+	i = "\n" + level*"  "
+	if len(elem):
+		if not elem.text or not elem.text.strip():
+			elem.text = i + "  "
+		if not elem.tail or not elem.tail.strip():
+			elem.tail = i
+		for elem in elem:
+			indent(elem, level+1)
+		if not elem.tail or not elem.tail.strip():
+			elem.tail = i
+	else:
+		if level and (not elem.tail or not elem.tail.strip()):
+			elem.tail = i
+
+indent(root)
+
+# write SVG to file
 tree.write(path, encoding='UTF-8', xml_declaration=True)
