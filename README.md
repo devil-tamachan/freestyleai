@@ -12,9 +12,12 @@ Open the scripts as text blocks in your .blend file and make sure Freestyle pyth
 scripting mode is enabled. Now you can add the scripts as style modules.
 You can render still images or animations, the svg file will be written on the same directory of the
 source blender file.
+
 When opened in Inkscape each rendered frame will be in a separate layer, with sublayers for the different
 types or rendered elements (e.g. fills, invisible lines, visible edges) according to the modules you used
 to render.
+
+IMPORTANT: this code uses the new freestyle API introduced in Blender 2.70, it won't work on earlier blender versions
 
 ## License
 
