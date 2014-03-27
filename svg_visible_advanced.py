@@ -16,11 +16,7 @@ try:
     import xml.etree.cElementTree as et
 except ImportError:
     import xml.etree.ElementTree as et
-
-# change this values to change hidden lines style, default is black lines with 2px thickness    
-color = "black"    
-width = 1
-
+    
 _HEADER = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>\n
 """
@@ -48,6 +44,7 @@ except IOError:
 	f.write(_ROOT % (w,h))
 	f.close()
 
+
 # select
 preds = [
     pyNatureUP1D(Nature.SILHOUETTE),
@@ -55,7 +52,7 @@ preds = [
     ContourUP1D()
 ]
 upred = join_unary_predicates(preds, OrUP1D)
-upred = AndUP1D(NotUP1D(QuantitativeInvisibilityUP1D(0)), upred)
+upred = AndUP1D(QuantitativeInvisibilityUP1D(0), upred)
 Operators.select(upred)
 
 # chain
@@ -73,23 +70,33 @@ root = tree.getroot()
 
 
 class SVGPathShader(StrokeShader):
-    def shade(self, stroke):
-        xml_string = '<path fill="none" stroke="%s" stroke-width="%d" stroke-dasharray="2,2" d="\nM '
-        for v in stroke:
-            x, y = v.point
-            xml_string += '%.3f,%.3f ' % (x, h - y)
-        xml_string += '" />'
-        xml_string = xml_string % (color, width)
-        invisible_element = et.XML(xml_string)
-        group_invisible.append(invisible_element)
+	def shade(self, stroke):
+		xml_string = '<path fill="none" stroke="%s" stroke-width="%d" d="\nM '
+		for v in stroke:
+			x, y = v.point
+			xml_string += '%.3f,%.3f ' % (x, h - y)
+		xml_string += '" />'
+		r, g, b = v.attribute.color * 255
+		color = "#%02x%02x%02x" % (r, g, b)
+		width = v.attribute.thickness
+		width = width[0] + width[1]
+		xml_string = xml_string % (color, width)
+		visible_element = et.XML(xml_string)
+		group_visible.append(visible_element)
+
 
 shaders_list = [
+    #ConstantThicknessShader(2),
+	#pyDepthDiscontinuityThicknessShader(1, 4),
+	#ConstantColorShader(0, 0, 0),
+	#pyMaterialColorShader(0.5),
     SamplingShader(50),
     SVGPathShader(),
-    ConstantColorShader(1, 0, 0),
+    ConstantColorShader(0, 0, 1),
     ConstantThicknessShader(10)
     ]
-
+    
+    
 # layer for the frame
 if tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame) is None:
 	layer_frame = et.XML('<g id="frame_%06d"></g>' % current_frame)
@@ -99,15 +106,13 @@ if tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_fram
 else:
 	layer_frame = tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame)
 
-# layer for invisible lines
-layer_invisible = et.XML('<g  id="layer_invisible"></g>')
-layer_invisible.set('{http://www.inkscape.org/namespaces/inkscape}groupmode', 'layer')
-layer_invisible.set('{http://www.inkscape.org/namespaces/inkscape}label', 'invisible')
-layer_frame.append(layer_invisible)
-group_invisible = et.XML('<g id="invisible"></g>' )
-layer_invisible.append(group_invisible)
-    
-
+# layer for visible lines
+layer_visible = et.XML('<g  id="layer_visible_advanced"></g>')
+layer_visible.set('{http://www.inkscape.org/namespaces/inkscape}groupmode', 'layer')
+layer_visible.set('{http://www.inkscape.org/namespaces/inkscape}label', 'visible advanced')
+layer_frame.append(layer_visible)
+group_visible = et.XML('<g id="visible_advanced"></g>' )
+layer_visible.append(group_visible)
 Operators.create(TrueUP1D(), shaders_list)
 
 # prettifies

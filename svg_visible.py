@@ -16,6 +16,10 @@ try:
     import xml.etree.cElementTree as et
 except ImportError:
     import xml.etree.ElementTree as et
+
+# change this values to change visible lines style, default is black lines with 2px thickness    
+color = "black"    
+width = 2
     
 _HEADER = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>\n
@@ -71,11 +75,12 @@ root = tree.getroot()
 
 class SVGPathShader(StrokeShader):
     def shade(self, stroke):
-        xml_string = '<path fill="none" stroke="black" stroke-width="2" d="\nM '
+        xml_string = '<path fill="none" stroke="%s" stroke-width="%d" d="\nM '
         for v in stroke:
             x, y = v.point
             xml_string += '%.3f,%.3f ' % (x, h - y)
         xml_string += '" />'
+        xml_string = xml_string % (color, width)
         visible_element = et.XML(xml_string)
         group_visible.append(visible_element)
 
