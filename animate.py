@@ -5,14 +5,8 @@
 import os
 import re
 import bpy
-#from bpy_extras.object_utils import world_to_camera_view
-#from freestyle import *
-#from freestyle.functions import *
-#from freestyle.predicates import *
-#from freestyle.types import *
-#from freestyle.shaders import *
-#from parameter_editor import *
-#from freestyle.chainingiterators import *
+
+from parameter_editor import *
 
 try:
     import xml.etree.cElementTree as et
