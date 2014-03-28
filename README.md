@@ -21,7 +21,7 @@ IMPORTANT: this code uses the new freestyle API introduced in Blender 2.70, it w
 
 ## Animation in SVG
 
-You can automatically output a SVG file that contains frame-by-frame animation using SVG native <animate> tags,
+You can automatically output a SVG file that contains frame-by-frame animation using SVG native ```<animate>``` tags,
 ready to be used on the web, and it will work on most modern browsers. Ain't that cool?
 To do this, just add to your freestyle rendering modules the 'animate.py' script, the same way you would do with any other module.
 The 'animate' module can go in any position on your module queue, but I suggest to put it in first or last position for a cleaner SVG
