@@ -23,11 +23,31 @@ IMPORTANT: this code uses the new freestyle API introduced in Blender 2.70, it w
 
 You can automatically output a SVG file that contains frame-by-frame animation using SVG native ```<animate>``` tags,
 ready to be used on the web, and it will work on most modern browsers. Ain't that cool?
-To do this, just add to your freestyle rendering modules the 'animate.py' script, the same way you would do with any other module.
+To do this, just add to your freestyle rendering modules the ```animate.py``` script, the same way you would do with any other module.
 The 'animate' module can go in any position on your module queue, but I suggest to put it in first or last position for a cleaner SVG
 
 ![Animated SVG from Blender](https://rawgithub.com/hvfrancesco/freestylesvg/master/example/animated.svg)
 
 ## License
 
-MIT
+The MIT License (MIT)
+
+Copyright (c) 2014, Francesco Fantoni - Jarno Leppänen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
