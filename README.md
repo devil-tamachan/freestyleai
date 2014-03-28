@@ -28,6 +28,10 @@ The 'animate' module can go in any position on your module queue, but I suggest 
 
 ![Animated SVG from Blender](https://rawgithub.com/hvfrancesco/freestylesvg/master/example/animated.svg)
 
+![Animated SVG from Blender](https://rawgithub.com/hvfrancesco/freestylesvg/master/example/miku2.svg)
+
+*Model by Kio*
+
 ## License
 
 The MIT License (MIT)
