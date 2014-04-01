@@ -64,7 +64,7 @@ frames = tree.findall("*")
 n_of_frames = len(frames)
 keyTimes = ""
 for n in range(0, n_of_frames):
-	keyTimes += str(n/n_of_frames) + ";"
+	keyTimes += "%.3f" % (n/n_of_frames) + ";"
 keyTimes += "1"
 dur = (n_of_frames / fps)
 
