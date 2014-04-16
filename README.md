@@ -9,7 +9,7 @@ http://togetter.com/li/655463 (Japanese - 日本語での使い方)
 
 The MIT License (MIT)
 
-Copyright (c) 2014, devil.tamachan@gmail.com - Francesco Fantoni - Jarno Lepp辰nen
+Copyright (c) 2014, devil.tamachan@gmail.com - Francesco Fantoni - Jarno Leppänen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
