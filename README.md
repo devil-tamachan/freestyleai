@@ -1,5 +1,10 @@
 # Adobe Illustrator(.ai) output for Blender Freestyle
 
+## How to use (使い方)
+The same way as freestylesvg.
+
+http://togetter.com/li/655463 (Japanese - 日本語での使い方)
+
 ## License
 
 The MIT License (MIT)
