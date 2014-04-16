@@ -1,15 +1,15 @@
 # Adobe Illustrator(.ai) output for Blender Freestyle
 
-## How to use (»È¤¤Êı)
+## How to use (ä½¿ã„æ–¹)
 The same way as freestylesvg.
 
-http://togetter.com/li/655463 (Japanese - ÆüËÜ¸ì¤Ç¤Î»È¤¤Êı)
+http://togetter.com/li/655463 (Japanese - æ—¥æœ¬èªã§ã®ä½¿ã„æ–¹)
 
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2014, devil.tamachan@gmail.com - Francesco Fantoni - Jarno LeppÃ¤nen
+Copyright (c) 2014, devil.tamachan@gmail.com - Francesco Fantoni - Jarno Leppè¾°nen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
