@@ -5,6 +5,7 @@
 import os
 import re
 import bpy
+import time
 from bpy_extras.object_utils import world_to_camera_view
 from freestyle import *
 from freestyle.functions import *
@@ -14,38 +15,66 @@ from freestyle.shaders import *
 from parameter_editor import *
 from freestyle.chainingiterators import *
 
-try:
-    import xml.etree.cElementTree as et
-except ImportError:
-    import xml.etree.ElementTree as et
-    
 
 _HEADER = """\
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n
+%!PS-Adobe-3.0 EPSF
 """
-_ROOT = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="%d" height="%d"></svg>\n'
+_ROOT = """\
+%%%%BoundingBox: 0 0 %d %d
+"""
+_HEADER2 = """\
+%AI5_FileFormat 3
+%%EndComments
+%%BeginProlog
+%%EndProlog
+%%BeginSetup
+%%EndSetup
+1 XR
+"""
 
+_FOOTER = """\
+%%Trailer
+%%EOF
+"""
 
-SVG_NS = "http://www.w3.org/2000/svg"
-et.register_namespace("", SVG_NS)
-et.register_namespace("sodipodi", "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd")
-et.register_namespace("inkscape", "http://www.inkscape.org/namespaces/inkscape")
+_LAYERHEADER = """\
+%AI5_BeginLayer
+1 1 1 1 0 0 -1 49 80 161 Lb
+(New Layer {0:.7f}) Ln
+"""
+_LAYERFOOTER = """\
+LB
+%AI5_EndLayer--
+"""
+
 
 scene = getCurrentScene()
 current_frame = scene.frame_current
 w = scene.render.resolution_x * scene.render.resolution_percentage / 100
 h = scene.render.resolution_y * scene.render.resolution_percentage / 100
-path = re.sub(r'\.blend$|$', '.svg' , bpy.data.filepath)
+path = re.sub(r'\.blend$|$', '.ai' , bpy.data.filepath)
 
 # write header if it does not yet exists
 try:
-	with open(path) as f:
-		pass
+  f = open(path, "r+")
+  posPrev = 0
+  line = f.readline()
+  while line != '':
+    #print(line)
+    if line.rstrip() == "%%Trailer":
+      print("found\n")
+      f.seek(posPrev)
+      f.truncate()
+      f.write("\n")
+      break
+    posPrev = f.tell()
+    line = f.readline()
 except IOError:
-	f = open(path, "w")
-	f.write(_HEADER)
-	f.write(_ROOT % (w,h))
-	f.close()
+  print("newfile\n")
+  f = open(path, "w")
+  f.write(_HEADER)
+  f.write(_ROOT % (w,h))
+  f.write(_HEADER2)
 
 # select
 preds = [
@@ -97,10 +126,6 @@ class ShapeZ(BinaryPredicate1D):
 Operators.sort(ShapeZ())
 
 # shade and write svg
-
-tree = et.parse(path)
-root = tree.getroot()
-
 shape_map = {}
 
 class ViewShapeColorShader(StrokeShader):
@@ -128,61 +153,48 @@ shaders_list = [
     ]
 Operators.create(TrueUP1D(), shaders_list)
 
+def RGB2CMYK(rgb):
+  p1 = max(rgb)
+  k = 1.0-p1
+  c = (1.0-rgb[0]-k)/p1
+  m = (1.0-rgb[1]-k)/p1
+  y = (1.0-rgb[2]-k)/p1
+  return (c, m, y, k)
+
 def write_fill(item):
-    xml_string = '<path fill-rule="evenodd" fill="#%02x%02x%02x" fill-opacity="%.2f" stroke="none" d="\n' % (tuple(map(lambda c: c * 255, item[1])) + (item[2],))
+    cmyk = RGB2CMYK(item[1])
+    path_string = 'u\n{0:.6f} {1:.6f} {2:.6f} {3:.6f} k\n'.format(cmyk[0], cmyk[1], cmyk[2], cmyk[3])
+    #xml_string = '<path fill-rule="evenodd" fill="#%02x%02x%02x" fill-opacity="%.2f" stroke="none" d="\n' % (tuple(map(lambda c: c * 255, item[1])) + (item[2],))
+    bFirst = True
     for stroke in item[0]:
         points = []
-        xml_string += 'M '
         for v in stroke:
             x, y = v.point
-            xml_string += '%.3f,%.3f ' % (x, h - y)
-        xml_string += 'z'
-    xml_string +='" />'
-    return xml_string
-
-# layer for the frame
-if tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame) is None:
-	layer_frame = et.XML('<g id="frame_%06d"></g>' % current_frame)
-	layer_frame.set('{http://www.inkscape.org/namespaces/inkscape}groupmode', 'layer')
-	layer_frame.set('{http://www.inkscape.org/namespaces/inkscape}label', 'frame_%06d' % current_frame)
-	root.append(layer_frame)
-else:
-	layer_frame = tree.find(".//{http://www.w3.org/2000/svg}g[@id='frame_%06d']" % current_frame)
+            path_string += '{0:.3f} {1:.3f} '.format(x, y)
+            if bFirst:
+              bFirst=False
+              path_string += 'm\n'
+            else:
+              path_string += 'L\n'
+        path_string += 'f\n'
+    path_string +="U\n"
+    return path_string
 
 
 # layer for fills
-layer_fills = et.XML('<g  id="layer_fills"></g>')
-layer_fills.set('{http://www.inkscape.org/namespaces/inkscape}groupmode', 'layer')
-layer_fills.set('{http://www.inkscape.org/namespaces/inkscape}label', 'fills')
-layer_frame.append(layer_fills)
-group_fills = et.XML('<g id="fills"></g>' )
-layer_fills.append(group_fills)
+
+group_string = "u\n"
 
 if len(shape_map) == 1:
-    fill = et.XML(write_fill(next(iter(shape_map.values()))))
-    group_fills.append(fill)
+    group_string += write_fill(next(iter(shape_map.values())))
 else:
     for k, item in sorted(shape_map.items(), key = lambda x: -z_map[x[0]]):
-        fill = et.XML(write_fill(item))
-        group_fills.append(fill)
+        group_string += write_fill(item)
 
-# prettifies
-def indent(elem, level=0):
-	i = "\n" + level*"  "
-	if len(elem):
-		if not elem.text or not elem.text.strip():
-			elem.text = i + "  "
-		if not elem.tail or not elem.tail.strip():
-			elem.tail = i
-		for elem in elem:
-			indent(elem, level+1)
-		if not elem.tail or not elem.tail.strip():
-			elem.tail = i
-	else:
-		if level and (not elem.tail or not elem.tail.strip()):
-			elem.tail = i
+group_string += "U\n"
 
-indent(root)
-
-# write SVG to file
-tree.write(path, encoding='UTF-8', xml_declaration=True)
+f.write(_LAYERHEADER.format(time.time()))
+f.write(group_string)
+f.write(_LAYERFOOTER)
+f.write(_FOOTER)
+f.close()
