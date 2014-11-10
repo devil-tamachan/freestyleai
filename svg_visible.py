@@ -4,6 +4,7 @@
 
 import os
 import re
+import bpy
 import time
 from freestyle import *
 from freestyle.functions import *
@@ -12,6 +13,15 @@ from freestyle.types import *
 from freestyle.shaders import *
 from parameter_editor import *
 from freestyle.chainingiterators import *
+
+#Operators.reset(delete_strokes=False)
+def join_unary_predicates(upred_list, bpred):
+    if not upred_list:
+        return TrueUP1D()
+    upred = upred_list[0]
+    for p in upred_list[1:]:
+        upred = bpred(upred, p)
+    return upred
 
 # change this values to change visible lines style, default is black lines with 2px thickness    
 color = "0.620000 0.580000 0.435000 0.996000 K"    
@@ -92,7 +102,6 @@ Operators.bidirectional_chain(ChainSilhouetteIterator())
 
 # sort
 Operators.sort(pyZBP1D())
-
 
 class AIPathShader(StrokeShader):
     def shade(self, stroke):

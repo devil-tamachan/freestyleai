@@ -15,6 +15,7 @@ from freestyle.shaders import *
 from parameter_editor import *
 from freestyle.chainingiterators import *
 
+#Operators.reset(delete_strokes=False)
 
 _HEADER = """\
 %!PS-Adobe-3.0 EPSF
@@ -77,53 +78,33 @@ except IOError:
   f.write(_HEADER2)
 
 # select
-preds = [
-    ContourUP1D(),
-    NotUP1D(pyIsOccludedByItselfUP1D())
-]
-upred = join_unary_predicates(preds, AndUP1D)
+upred = AndUP1D(QuantitativeInvisibilityUP1D(0), ContourUP1D())
 Operators.select(upred)
 
 # chain
-class ViewshapeChainingIterator(ChainingIterator):
-    def init(self):
-        pass
-    def traverse(self, iter):
-        global prev_point, last_point
-        edge = self.current_edge
-        viewshape = self.current_edge.viewshape
-        it = AdjacencyIterator(iter)
-        while not it.is_end:
-            ve = it.object
-            if viewshape.id == ve.viewshape.id:
-                last_point = ve.last_viewvertex.point_2d
-                return ve
-            it.increment()
-        return None
-Operators.bidirectional_chain(ViewshapeChainingIterator())
+bpred = SameShapeIdBP1D()
+Operators.bidirectional_chain(ChainPredicateIterator(upred, bpred), NotUP1D(QuantitativeInvisibilityUP1D(0)))
 
-get_shape_list = GetShapeF1D()
-def get_shape(curve):
-    return get_shape_list(curve)[0]
-
-z_map = {}
-def get_z(shape):
-    global z_map
-    global scene
-    z = z_map.get(shape.id.first)
-    if z == None:
-        o = bpy.data.objects[shape.name]
-        z = world_to_camera_view(scene, scene.camera, o.location)[2]
-        z_map[shape.id.first] = z
-    return z
-def get_curve_z(curve):
-    return get_z(get_shape(curve))
-
-# sort
 class ShapeZ(BinaryPredicate1D):
+    """Sort ViewShapes by their z-index"""
+    def __init__(self, scene):
+        BinaryPredicate1D.__init__(self)
+        self.z_map = dict()
+        self.scene = scene
+
     def __call__(self, i1, i2):
-        return get_curve_z(i1) < get_curve_z(i2)
-Operators.sort(ShapeZ())
+        return self.get_z_curve(i1) < self.get_z_curve(i2)
+
+    def get_z_curve(self, curve, func=GetShapeF1D()):
+        shape = func(curve)[0]
+        # get the shapes z-index
+        z = self.z_map.get(shape.id.first)
+        if z is None:
+            o = bpy.data.objects[shape.name]
+            z = world_to_camera_view(self.scene, self.scene.camera, o.location).z
+            self.z_map[shape.id.first] = z
+        return z
+Operators.sort(ShapeZ(scene))
 
 # shade and write svg
 shape_map = {}
@@ -136,15 +117,13 @@ class ViewShapeColorShader(StrokeShader):
         item = shape_map.get(shape)
         if item == None:
             material = CurveMaterialF0D()(
-                Interface0DIterator(stroke.stroke_vertices_begin()))
-            color = material.diffuse[0:3]
-            alpha = material.diffuse[3]
-            item = ([stroke], color, alpha)
-            shape_map[shape] = item
+                Interface0DIterator(stroke))
+            *color, alpha = material.diffuse
+            shape_map[shape] = ([stroke], color, alpha)
         else:
             item[0].append(stroke)
         for v in stroke:
-            v.attribute.color = item[1]
+            v.attribute.visible = False
 
 shaders_list = [
     SamplingShader(50),
@@ -177,6 +156,7 @@ def write_fill(item):
             else:
               path_string += 'L\n'
         path_string += 'f\n'
+        bFirst=True
     path_string +="U\n"
     return path_string
 
@@ -188,7 +168,7 @@ group_string = "u\n"
 if len(shape_map) == 1:
     group_string += write_fill(next(iter(shape_map.values())))
 else:
-    for k, item in sorted(shape_map.items(), key = lambda x: -z_map[x[0]]):
+    for k, item in sorted(shape_map.items(), reverse=True):
         group_string += write_fill(item)
 
 group_string += "U\n"
